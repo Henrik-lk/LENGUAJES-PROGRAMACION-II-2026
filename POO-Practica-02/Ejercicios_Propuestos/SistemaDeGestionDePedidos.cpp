@@ -1,67 +1,61 @@
 #include <iostream>
 #include <string>
-#include <vector>
-#include <iomanip>
 using namespace std;
- 
-struct Producto { string nombre; double precio; int cantidad; };
- 
-class Inventario {
+
+class Avion {
 private:
-    vector<Producto> disponibles;
-    vector<Producto> agotados;
+    string modelo;
+    int combustible;
+
 public:
-    void agregarProducto(const Producto& p) {
-        if (p.cantidad > 0) disponibles.push_back(p);
-        else                agotados.push_back(p);
-        cout << "Producto agregado: " << p.nombre << endl;
+    Avion(string m, int c) {
+        modelo = m;
+        combustible = c;
     }
- 
-    bool realizarPedido(const string& nombre, int qty, double& totalOut) {
-        for (auto& p : disponibles) {
-            if (p.nombre == nombre) {
-                if (p.cantidad < qty) { cout << "Stock insuficiente." << endl; return false; }
-                p.cantidad -= qty;
-                totalOut = p.precio * qty;
-                if (p.cantidad == 0) {
-                    agotados.push_back(p);
-                    disponibles.erase(disponibles.begin() +
-                        (&p - &disponibles[0]));
-                }
-                return true;
-            }
-        }
-        cout << "Producto no encontrado." << endl; return false;
+
+    int getCombustible() {
+        return combustible;
     }
- 
-    void generarFactura(const string& cliente, const string& prod, int qty) {
-        double total = 0;
-        if (realizarPedido(prod, qty, total)) {
-            cout << "--- Factura ---" << endl;
-            cout << "Cliente : " << cliente << endl;
-            cout << "Producto: " << prod << " x" << qty << endl;
-            cout << "Total   : S/" << fixed << setprecision(2) << total << endl;
-        }
+
+    string getModelo() {
+        return modelo;
     }
- 
-    void mostrarEstado() const {
-        cout << "== Disponibles ==" << endl;
-        for (const auto& p : disponibles)
-            cout << "  " << p.nombre << " | S/" << p.precio << " | Stock: " << p.cantidad << endl;
-        cout << "== Agotados ==" << endl;
-        for (const auto& p : agotados)
-            cout << "  " << p.nombre << endl;
+
+    bool tieneCombustible(int necesario) {
+        return combustible >= necesario;
     }
 };
- 
+
+class Mision {
+private:
+    string destino;
+    int combustibleNecesario;
+
+public:
+    Mision(string d, int c) {
+        destino = d;
+        combustibleNecesario = c;
+    }
+
+    void iniciarMision(Avion avion) {
+        cout << "Avion: " << avion.getModelo() << endl;
+        cout << "Destino: " << destino << endl;
+        cout << "Combustible disponible: " << avion.getCombustible() << endl;
+        cout << "Combustible necesario: " << combustibleNecesario << endl;
+
+        if (avion.tieneCombustible(combustibleNecesario)) {
+            cout << "La misión puede realizarse." << endl;
+        } else {
+            cout << "No hay combustible suficiente." << endl;
+        }
+    }
+};
+
 int main() {
-    Inventario inv;
-    inv.agregarProducto({"Laptop HP",  2500.0, 5});
-    inv.agregarProducto({"Monitor 24",  650.0, 3});
-    inv.agregarProducto({"Teclado",      80.0, 0});
-    inv.mostrarEstado();
-    inv.generarFactura("Pedro Flores", "Laptop HP", 2);
-    inv.generarFactura("Maria Quispe", "Monitor 24", 5); // falla
-    inv.mostrarEstado();
+    Avion avion1("Boeing 747", 500);
+    Mision mision1("Lima", 300);
+
+    mision1.iniciarMision(avion1);
+
     return 0;
 }
