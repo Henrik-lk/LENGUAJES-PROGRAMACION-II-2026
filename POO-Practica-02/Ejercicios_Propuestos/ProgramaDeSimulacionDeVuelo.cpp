@@ -1,76 +1,79 @@
 #include <iostream>
+#include <vector>
 #include <string>
 using namespace std;
- 
-class Avion {
+
+class Producto {
 private:
-    string matricula;
-    double combustibleMax;
-    double combustibleActual;
-    int    capacidadTripulacion;
+    string nombre;
+    int stock;
+
 public:
-    Avion(string m, double cMax, int cap)
-        : matricula(m), combustibleMax(cMax), combustibleActual(cMax), capacidadTripulacion(cap) {}
- 
-    string getMatricula()    const { return matricula;           }
-    double getCombustible()  const { return combustibleActual;   }
-    int    getCapacidad()    const { return capacidadTripulacion;}
- 
-    bool tieneCombustibleParaVolar(double distancia) const {
-        double consumo = distancia * 0.12; // 0.12 L por km
-        return combustibleActual >= consumo;
+    Producto(string n, int s) {
+        nombre = n;
+        stock = s;
     }
- 
-    void consumirCombustible(double distancia) {
-        combustibleActual -= distancia * 0.12;
+
+    string getNombre() {
+        return nombre;
     }
- 
-    void mostrarInfo() const {
-        cout << "Avion: " << matricula << " | Combustible: " << combustibleActual
-             << " L / " << combustibleMax << " L" << endl;
+
+    int getStock() {
+        return stock;
+    }
+
+    void vender(int cantidad) {
+        if (cantidad <= stock) {
+            stock -= cantidad;
+            cout << "Pedido realizado correctamente." << endl;
+        } else {
+            cout << "No hay suficiente stock." << endl;
+        }
     }
 };
- 
-class Mision {
+
+class Inventario {
 private:
-    string destino;
-    double distanciaKm;
-    int    tripulacionNecesaria;
-    double duracionHoras;
+    vector<Producto> productos;
+
 public:
-    Mision(string d, double dist, int trip, double dur)
-        : destino(d), distanciaKm(dist), tripulacionNecesaria(trip), duracionHoras(dur) {}
- 
-    bool simular(Avion& avion) {
-        cout << "=== MISION: " << destino << " ===" << endl;
-        cout << "Distancia : " << distanciaKm << " km" << endl;
-        cout << "Duracion  : " << duracionHoras << " h" << endl;
-        cout << "Tripulacion requerida: " << tripulacionNecesaria << endl;
- 
-        if (avion.getCapacidad() < tripulacionNecesaria) {
-            cout << "Mision FALLIDA: tripulacion insuficiente." << endl;
-            return false;
+    void agregarProducto(Producto p) {
+        productos.push_back(p);
+    }
+
+    void mostrarProductos() {
+        cout << "Productos en inventario:" << endl;
+        for (int i = 0; i < productos.size(); i++) {
+            cout << productos[i].getNombre() << " - Stock: " << productos[i].getStock() << endl;
         }
-        if (!avion.tieneCombustibleParaVolar(distanciaKm)) {
-            cout << "Mision FALLIDA: combustible insuficiente." << endl;
-            return false;
+    }
+
+    void realizarPedido(string nombreProducto, int cantidad) {
+        for (int i = 0; i < productos.size(); i++) {
+            if (productos[i].getNombre() == nombreProducto) {
+                productos[i].vender(cantidad);
+                return;
+            }
         }
-        avion.consumirCombustible(distanciaKm);
-        cout << "Mision COMPLETADA con exito!" << endl;
-        avion.mostrarInfo();
-        return true;
+        cout << "Producto no encontrado." << endl;
     }
 };
- 
+
 int main() {
-    Avion boeing("OB-1234", 5000.0, 6);
-    boeing.mostrarInfo();
- 
-    Mision m1("Lima -> Cusco",  1100.0, 4, 1.5);
-    Mision m2("Lima -> Miami", 40000.0, 6, 9.0); // combustible insuficiente
- 
-    m1.simular(boeing);
-    cout << endl;
-    m2.simular(boeing);
+    Inventario inventario;
+
+    inventario.agregarProducto(Producto("Laptop", 5));
+    inventario.agregarProducto(Producto("Mouse", 10));
+    inventario.agregarProducto(Producto("Teclado", 3));
+
+    inventario.mostrarProductos();
+
+    cout << "-------------------" << endl;
+    inventario.realizarPedido("Laptop", 2);
+    inventario.realizarPedido("Teclado", 4);
+
+    cout << "-------------------" << endl;
+    inventario.mostrarProductos();
+
     return 0;
 }
