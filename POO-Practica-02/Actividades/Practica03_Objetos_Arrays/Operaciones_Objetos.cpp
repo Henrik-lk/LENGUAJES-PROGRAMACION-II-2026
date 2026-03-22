@@ -3,49 +3,65 @@
 #include <string>
 using namespace std;
 
-class Libro {
-private:
-    string titulo;
-    string autor;
-
+class Persona {
 public:
-    string genero;
+    string nombre;
+    int edad;
 
-    Libro(string t, string a, string g) {
-        titulo = t;
-        autor = a;
-        genero = g;
-    }
-
-    bool esIgualA(Libro otro) {
-        return (this->titulo == otro.titulo && this->autor == otro.autor);
+    Persona(string n, int e) {
+        nombre = n;
+        edad = e;
     }
 
     void mostrar() {
-        cout << "Título: " << titulo << ", Autor: " << autor << endl;
+        cout << "Nombre: " << nombre << ", Edad: " << edad << endl;
     }
 };
 
+void mostrarLista(vector<Persona> &lista) {
+    for (auto &p : lista) {
+        p.mostrar();
+    }
+}
+
+void eliminarPersona(vector<Persona> &lista, string nombre) {
+    for (int i = 0; i < lista.size(); i++) {
+        if (lista[i].nombre == nombre) {
+            lista.erase(lista.begin() + i);
+            cout << "Persona eliminada\n";
+            return;
+        }
+    }
+    cout << "Persona no encontrada\n";
+}
+
+void actualizarEdad(vector<Persona> &lista, string nombre, int nuevaEdad) {
+    for (auto &p : lista) {
+        if (p.nombre == nombre) {
+            p.edad = nuevaEdad;
+            cout << "Edad actualizada\n";
+            return;
+        }
+    }
+    cout << "Persona no encontrada\n";
+}
+
 int main() {
-    vector<Libro> libros;
+    vector<Persona> lista;
 
-    libros.push_back(Libro("1984", "George Orwell", "Novela"));
-    libros.push_back(Libro("1984", "George Orwell", "Distopia"));
-    libros.push_back(Libro("El Quijote", "Cervantes", "Clasico"));
+    lista.push_back(Persona("Juan", 20));
+    lista.push_back(Persona("Maria", 25));
+    lista.push_back(Persona("Carlos", 30));
 
-    cout << "Comparando libro 0 y libro 1: ";
-    if (libros[0].esIgualA(libros[1])) {
-        cout << "Son iguales" << endl;
-    } else {
-        cout << "No son iguales" << endl;
-    }
+    cout << "Lista inicial:\n";
+    mostrarLista(lista);
 
-    cout << "Comparando libro 0 y libro 2: ";
-    if (libros[0].esIgualA(libros[2])) {
-        cout << "Son iguales" << endl;
-    } else {
-        cout << "No son iguales" << endl;
-    }
+    actualizarEdad(lista, "Maria", 28);
+
+    eliminarPersona(lista, "Juan");
+
+    cout << "\nLista final:\n";
+    mostrarLista(lista);
 
     return 0;
 }
