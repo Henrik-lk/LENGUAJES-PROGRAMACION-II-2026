@@ -6,8 +6,8 @@
 | Asignación  | Asignar tareas a usuarios       |
 | Progreso    | Controlar avance de tareas      |
 | FechaLímite | Manejar fechas                  |
-  //Clases con una sola responsabilidad
-  #include <iostream>
+//Clases con una sola responsabilidad
+#include <iostream>
 #include <vector>
 using namespace std;
 
