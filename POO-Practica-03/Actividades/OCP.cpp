@@ -1,51 +1,73 @@
-//Definir interfaces (abstracción)
-class ITarea {
+#include <iostream>
+#include <memory>
+#include <string>
+using namespace std;
+
+class Tarea {
+private:
+    string titulo;
 public:
-    virtual void mostrarDetalle() = 0;
+    explicit Tarea(string titulo) : titulo(std::move(titulo)) {}
+    string getTitulo() const { return titulo; }
 };
-//Extender sin modificar (herencia)
-class TareaBasica : public ITarea {
+
+class INotificador {
 public:
-    void mostrarDetalle() override {
-        cout << "Tarea básica" << endl;
+    virtual void enviar(const Tarea& tarea, const string& destinatario) = 0;
+    virtual ~INotificador() = default;
+};
+
+class NotificadorEmail : public INotificador {
+public:
+    void enviar(const Tarea& tarea, const string& destinatario) override {
+        cout << "[EMAIL] Tarea '" << tarea.getTitulo()
+             << "' enviada a " << destinatario << '\n';
     }
 };
 
-class TareaUrgente : public ITarea {
+class NotificadorSMS : public INotificador {
 public:
-    void mostrarDetalle() override {
-        cout << "Tarea urgente con alta prioridad" << endl;
+    void enviar(const Tarea& tarea, const string& destinatario) override {
+        cout << "[SMS] Tarea '" << tarea.getTitulo()
+             << "' enviada a " << destinatario << '\n';
     }
 };
 
-class TareaConRecordatorio : public ITarea {
+class NotificadorPush : public INotificador {
 public:
-    void mostrarDetalle() override {
-        cout << "Tarea con recordatorio automático" << endl;
+    void enviar(const Tarea& tarea, const string& destinatario) override {
+        cout << "[PUSH] Tarea '" << tarea.getTitulo()
+             << "' enviada a " << destinatario << '\n';
     }
 };
-//Cambios no afectan otras clases
-class SistemaTareas {
+
+class GestorEnvios {
+private:
+    shared_ptr<INotificador> notificador;
+
 public:
-    void mostrar(ITarea* tarea) {
-        tarea->mostrarDetalle();
+    explicit GestorEnvios(shared_ptr<INotificador> notificador)
+        : notificador(std::move(notificador)) {}
+
+    void procesar(const Tarea& tarea, const string& destinatario) {
+        notificador->enviar(tarea, destinatario);
     }
 };
-//Uso en main
+
 int main() {
-    SistemaTareas sistema;
+    Tarea tarea("Preparar informe final");
 
-    ITarea* t1 = new TareaBasica();
-    ITarea* t2 = new TareaUrgente();
-    ITarea* t3 = new TareaConRecordatorio();
+    auto email = make_shared<NotificadorEmail>();
+    auto sms = make_shared<NotificadorSMS>();
+    auto push = make_shared<NotificadorPush>();
 
-    sistema.mostrar(t1);
-    sistema.mostrar(t2);
-    sistema.mostrar(t3);
+    GestorEnvios envio1(email);
+    GestorEnvios envio2(sms);
+    GestorEnvios envio3(push);
 
-    delete t1;
-    delete t2;
-    delete t3;
+    envio1.procesar(tarea, "ana@correo.com");
+    envio2.procesar(tarea, "999888777");
+    envio3.procesar(tarea, "usuario_app");
 
     return 0;
 }
