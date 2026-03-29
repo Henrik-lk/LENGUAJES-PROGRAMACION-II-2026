@@ -1,98 +1,156 @@
-//Identificación de módulos
-| Módulo      | Responsabilidad                 |
-| ----------- | ------------------------------- |
-| Usuario     | Gestionar datos del usuario     |
-| Tarea       | Gestionar información de tareas |
-| Asignación  | Asignar tareas a usuarios       |
-| Progreso    | Controlar avance de tareas      |
-| FechaLímite | Manejar fechas                  |
-//Clases con una sola responsabilidad
 #include <iostream>
 #include <vector>
+#include <memory>
+#include <string>
+#include <iomanip>
 using namespace std;
 
-// Clase Usuario
+enum class EstadoTarea {
+    Pendiente,
+    EnProceso,
+    Completada
+};
+
 class Usuario {
 private:
+    int id;
     string nombre;
+    string correo;
 
 public:
-    Usuario(string nombre) {
-        this->nombre = nombre;
-    }
+    Usuario(int id, string nombre, string correo)
+        : id(id), nombre(std::move(nombre)), correo(std::move(correo)) {}
 
-    void mostrarUsuario() {
-        cout << "Usuario: " << nombre << endl;
-    }
+    int getId() const { return id; }
+    string getNombre() const { return nombre; }
+    string getCorreo() const { return correo; }
 };
 
-// Clase Tarea
 class Tarea {
 private:
+    int id;
     string titulo;
+    string descripcion;
+    string fechaLimite;
+    EstadoTarea estado;
+    int usuarioAsignadoId;
 
 public:
-    Tarea(string titulo) {
-        this->titulo = titulo;
+    Tarea(int id, string titulo, string descripcion, string fechaLimite)
+        : id(id), titulo(std::move(titulo)), descripcion(std::move(descripcion)),
+          fechaLimite(std::move(fechaLimite)), estado(EstadoTarea::Pendiente),
+          usuarioAsignadoId(-1) {}
+
+    int getId() const { return id; }
+    string getTitulo() const { return titulo; }
+    string getDescripcion() const { return descripcion; }
+    string getFechaLimite() const { return fechaLimite; }
+    EstadoTarea getEstado() const { return estado; }
+    int getUsuarioAsignadoId() const { return usuarioAsignadoId; }
+
+    void asignarAUsuario(int idUsuario) {
+        usuarioAsignadoId = idUsuario;
     }
 
-    void mostrarTarea() {
-        cout << "Tarea: " << titulo << endl;
+    void cambiarEstado(EstadoTarea nuevoEstado) {
+        estado = nuevoEstado;
+    }
+
+    string estadoComoTexto() const {
+        switch (estado) {
+            case EstadoTarea::Pendiente: return "Pendiente";
+            case EstadoTarea::EnProceso: return "En proceso";
+            case EstadoTarea::Completada: return "Completada";
+        }
+        return "Desconocido";
+    }
+
+    void mostrarResumen() const {
+        cout << "Tarea #" << id
+             << " | Titulo: " << titulo
+             << " | Fecha limite: " << fechaLimite
+             << " | Estado: " << estadoComoTexto()
+             << " | Usuario asignado: " << usuarioAsignadoId
+             << '\n';
     }
 };
 
-// Clase Asignacion
-class Asignacion {
-public:
-    void asignar(Usuario u, Tarea t) {
-        cout << "Asignando tarea a usuario..." << endl;
-        u.mostrarUsuario();
-        t.mostrarTarea();
-    }
-};
-
-// Clase Progreso
-class Progreso {
+class RepositorioTareas {
 private:
-    int porcentaje;
+    vector<shared_ptr<Tarea>> tareas;
 
 public:
-    Progreso(int p) {
-        porcentaje = p;
+    void agregar(const shared_ptr<Tarea>& tarea) {
+        tareas.push_back(tarea);
     }
 
-    void mostrarProgreso() {
-        cout << "Progreso: " << porcentaje << "%" << endl;
+    shared_ptr<Tarea> buscarPorId(int id) {
+        for (auto& tarea : tareas) {
+            if (tarea->getId() == id) return tarea;
+        }
+        return nullptr;
+    }
+
+    void listar() const {
+        cout << "\n--- LISTA DE TAREAS ---\n";
+        for (const auto& tarea : tareas) {
+            tarea->mostrarResumen();
+        }
     }
 };
 
-// Clase FechaLimite
-class FechaLimite {
-private:
-    string fecha;
-
+class AsignadorTareas {
 public:
-    FechaLimite(string fecha) {
-        this->fecha = fecha;
-    }
-
-    void mostrarFecha() {
-        cout << "Fecha límite: " << fecha << endl;
+    void asignar(const shared_ptr<Tarea>& tarea, const Usuario& usuario) {
+        if (tarea) {
+            tarea->asignarAUsuario(usuario.getId());
+        }
     }
 };
-//Cada módulo tiene un único propósito
+
+class SeguimientoProgreso {
+public:
+    void actualizarEstado(const shared_ptr<Tarea>& tarea, EstadoTarea nuevoEstado) {
+        if (tarea) {
+            tarea->cambiarEstado(nuevoEstado);
+        }
+    }
+};
+
+class ServicioNotificacion {
+public:
+    void notificarAsignacion(const Usuario& usuario, const Tarea& tarea) {
+        cout << "[NOTIFICACION] Se asigno la tarea '" << tarea.getTitulo()
+             << "' a " << usuario.getNombre()
+             << " (" << usuario.getCorreo() << ")\n";
+    }
+};
+
 int main() {
-    Usuario u("Juan");
-    Tarea t("Desarrollar sistema");
+    Usuario u1(1, "Ana Torres", "ana@correo.com");
+    Usuario u2(2, "Luis Perez", "luis@correo.com");
 
-    Asignacion asignar;
-    asignar.asignar(u, t);
+    auto tarea1 = make_shared<Tarea>(101, "Diseñar interfaz", "Crear prototipo del modulo", "2026-04-05");
+    auto tarea2 = make_shared<Tarea>(102, "Implementar backend", "Desarrollar logica de negocio", "2026-04-10");
 
-    Progreso p(50);
-    p.mostrarProgreso();
+    RepositorioTareas repositorio;
+    AsignadorTareas asignador;
+    SeguimientoProgreso seguimiento;
+    ServicioNotificacion notificador;
 
-    FechaLimite f("30/03/2026");
-    f.mostrarFecha();
+    repositorio.agregar(tarea1);
+    repositorio.agregar(tarea2);
+
+    asignador.asignar(tarea1, u1);
+    notificador.notificarAsignacion(u1, *tarea1);
+
+    asignador.asignar(tarea2, u2);
+    notificador.notificarAsignacion(u2, *tarea2);
+
+    seguimiento.actualizarEstado(tarea1, EstadoTarea::EnProceso);
+    seguimiento.actualizarEstado(tarea2, EstadoTarea::Pendiente);
+
+    repositorio.listar();
 
     return 0;
 }
